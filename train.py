@@ -11,19 +11,21 @@ import matplotlib.pyplot as plt
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('device is ',device)
-EPOCHS = 10
+EPOCHS = 25
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-4
 
 
-CSV_PATH = 'data/driving_log.csv'
+CSV_PATH = './balanced_data/driving_log_balanced.csv'
 IMG_DIR = 'data/IMG'
-CHECKPOINT_DIR = 'checkpoints'
+CHECKPOINT_DIR = 'checkpointsV2'
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
 
-columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed']
-df = pd.read_csv(CSV_PATH,names=columns)
+# columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed']
+# df = pd.read_csv(CSV_PATH,names=columns)
+
+df = pd.read_csv(CSV_PATH)
 
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 
@@ -75,3 +77,11 @@ for epoch in range(EPOCHS):
 
 
 
+plt.plot(train_losses, label="Train Loss")
+plt.plot(test_losses, label="Test Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
+plt.title("Loss Curve")
+plt.grid(True)
+plt.show()

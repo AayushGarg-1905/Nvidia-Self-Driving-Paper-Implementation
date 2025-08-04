@@ -24,7 +24,7 @@ maxSpeed = 10
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = NvidiaModel().to(device)
-model.load_state_dict(torch.load('checkpoints/nvidia_model_epoch10.pth', map_location=device))
+model.load_state_dict(torch.load('checkpointsV2/nvidia_model_epoch21.pth', map_location=device))
 model.eval()
 print("Model loaded")
 
@@ -35,13 +35,12 @@ preprocess = transforms.Compose([
 ])
 
 def preProcess(img):
+
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
     img = img[60:-25, :, :]
     img = cv2.resize(img, (200, 66), interpolation=cv2.INTER_AREA)
-    img = img / 255.0
-    mean = np.array([0.5, 0.5, 0.5])
-    std = np.array([0.5, 0.5, 0.5])
-    img = (img - mean) / std
-
+    img = img.astype(np.float32)
+    img = img / 127.5 - 1.0
     img = torch.tensor(img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).to(device)
 
     return img
@@ -77,186 +76,3 @@ if __name__ == '__main__':
     eventlet.wsgi.server(eventlet.listen(('', 4567)), app)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # drive.py
-
-# import argparse
-# import base64
-# import numpy as np
-# from PIL import Image
-# from io import BytesIO
-# import torch
-# import cv2
-
-# from flask import Flask
-
-
-# from model import NvidiaModel
-# from torchvision import transforms
-
-
-# # Setup Flask app
-# app = Flask(__name__)
-# socketio = SocketIO(app)
-
-# # Image preprocessing
-# preprocess = transforms.Compose([
-#     transforms.ToPILImage(),
-#     transforms.Resize((66, 200)),
-#     transforms.ToTensor()
-# ])
-
-# # Load model
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# model = NvidiaModel().to(device)
-# model.load_state_dict(torch.load('checkpoints/nvidia_model_epoch10.pth', map_location=device))
-# model.eval()
-# print('--------------------------model loaded')
-# @socketio.on('telemetry')
-# def telemetry(data):
-#     print("---------------------------------------Received telemetry") 
-#     if data:
-#         # Decode image
-#         img_str = data["image"]
-#         image = Image.open(BytesIO(base64.b64decode(img_str)))
-#         image = np.asarray(image)
-
-#         # Preprocess
-#         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-#         image = preprocess(image).unsqueeze(0).to(device)
-
-#         # Predict
-#         with torch.no_grad():
-#             steering_angle = model(image).item()
-
-#         print(f"Predicted angle: {steering_angle:.4f}")
-
-#         # Send back to simulator
-#         send_control(steering_angle, 5.0)
-
-# @socketio.on('connect')
-# def connect():
-#     print("----------------------------------------------Connected to Udacity Simulator.")
-#     send_control(0.0, 5.0)
-
-# def send_control(steering_angle, throttle):
-#     print('------------------send control')
-#     socketio.emit(
-#         "steer",
-#         data={
-#             'steering_angle': str(steering_angle),
-#             'throttle': str(throttle)
-#         }
-#     )
-
-# if __name__ == '__main__':
-#     print('--------------------------module started')
-#     socketio.run(app, host='0.0.0.0', port=4567, debug=True, use_reloader=False)
